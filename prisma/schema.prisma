@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client"
+  output = "../generated/prisma"
+}
+datasource db {
+  provider = "postgresql"
+}
+enum Role {
+  ADMIN
+  STAFF
+  CUSTOMER
+}
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+model User {
+  id String @id @default(cuid())
+  name String
+  email String @unique
+  passwordHash String
+  role Role @default(CUSTOMER)
+  active Boolean @default(true)
+  customerBookings Booking[] @relation("Customer")
+  staffBookings Booking[] @relation("Staff")
+  sessions Session[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Session {
+  id String @id @default(cuid())
+  tokenHash String @unique
+  userId String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([expiresAt])
+}
+model Service {
+  id String @id @default(cuid())
+  name String @unique
+  description String
+  durationMinutes Int
+  price Decimal @db.Decimal(10,2)
+  active Boolean @default(true)
+  bookings Booking[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Booking {
+  id String @id @default(cuid())
+  reference String @unique
+  customerId String
+  staffId String
+  serviceId String
+  startAt DateTime
+  endAt DateTime
+  status BookingStatus @default(PENDING)
+  notes String?
+  customer User @relation("Customer",fields:[customerId],references:[id],onDelete:Restrict)
+  staff User @relation("Staff",fields:[staffId],references:[id],onDelete:Restrict)
+  service Service @relation(fields:[serviceId],references:[id],onDelete:Restrict)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([staffId,startAt])
+  @@index([customerId])
+  @@index([staffId,startAt,endAt])
+  @@index([status])
+}

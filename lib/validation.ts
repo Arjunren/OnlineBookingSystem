@@ -1,0 +1,1 @@
+import { z } from "zod";export const loginSchema=z.object({email:z.email().max(254).transform(v=>v.toLowerCase()),password:z.string().min(12).max(128)});export const createBookingSchema=z.object({serviceId:z.string().min(10).max(64),staffId:z.string().min(10).max(64),startAt:z.iso.datetime({offset:true}),notes:z.string().trim().max(500).optional()});

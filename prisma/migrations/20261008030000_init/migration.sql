@@ -1,0 +1,14 @@
+CREATE TYPE "Role" AS ENUM ('ADMIN','STAFF','CUSTOMER');
+CREATE TYPE "BookingStatus" AS ENUM ('PENDING','CONFIRMED','COMPLETED','CANCELLED','NO_SHOW');
+CREATE TABLE "User" ("id" TEXT PRIMARY KEY,"name" TEXT NOT NULL,"email" TEXT NOT NULL,"passwordHash" TEXT NOT NULL,"role" "Role" NOT NULL DEFAULT 'CUSTOMER',"active" BOOLEAN NOT NULL DEFAULT true,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL);
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE TABLE "Session" ("id" TEXT PRIMARY KEY,"tokenHash" TEXT NOT NULL,"userId" TEXT NOT NULL,"expiresAt" TIMESTAMP(3) NOT NULL,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE UNIQUE INDEX "Session_tokenHash_key" ON "Session"("tokenHash"); CREATE INDEX "Session_userId_idx" ON "Session"("userId"); CREATE INDEX "Session_expiresAt_idx" ON "Session"("expiresAt");
+CREATE TABLE "Service" ("id" TEXT PRIMARY KEY,"name" TEXT NOT NULL,"description" TEXT NOT NULL,"durationMinutes" INTEGER NOT NULL,"price" DECIMAL(10,2) NOT NULL,"active" BOOLEAN NOT NULL DEFAULT true,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL);
+CREATE UNIQUE INDEX "Service_name_key" ON "Service"("name");
+CREATE TABLE "Booking" ("id" TEXT PRIMARY KEY,"reference" TEXT NOT NULL,"customerId" TEXT NOT NULL,"staffId" TEXT NOT NULL,"serviceId" TEXT NOT NULL,"startAt" TIMESTAMP(3) NOT NULL,"endAt" TIMESTAMP(3) NOT NULL,"status" "BookingStatus" NOT NULL DEFAULT 'PENDING',"notes" TEXT,"createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,"updatedAt" TIMESTAMP(3) NOT NULL);
+CREATE UNIQUE INDEX "Booking_reference_key" ON "Booking"("reference"); CREATE UNIQUE INDEX "Booking_staffId_startAt_key" ON "Booking"("staffId","startAt"); CREATE INDEX "Booking_customerId_idx" ON "Booking"("customerId"); CREATE INDEX "Booking_staffId_startAt_endAt_idx" ON "Booking"("staffId","startAt","endAt"); CREATE INDEX "Booking_status_idx" ON "Booking"("status");
+ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_customerId_fkey" FOREIGN KEY ("customerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_staffId_fkey" FOREIGN KEY ("staffId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Booking" ADD CONSTRAINT "Booking_serviceId_fkey" FOREIGN KEY ("serviceId") REFERENCES "Service"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
